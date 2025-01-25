@@ -1,0 +1,14 @@
+# Maven/Gradle directories
+/target/
+/build/
+
+# IDE settings
+.idea/
+*.iml
+*.class
+
+# Logs
+*.log
+
+# Environment files
+*.env

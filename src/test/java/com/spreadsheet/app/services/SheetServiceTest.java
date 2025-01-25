@@ -29,7 +29,9 @@ class SheetServiceTest {
         List<ColumnDefinition> columns = Arrays.asList(
                 new ColumnDefinition("A", ColumnType.STRING),
                 new ColumnDefinition("B", ColumnType.BOOLEAN),
-                new ColumnDefinition("C", ColumnType.STRING)
+                new ColumnDefinition("C", ColumnType.STRING),
+                new ColumnDefinition("D", ColumnType.INT),
+                new ColumnDefinition("E", ColumnType.DOUBLE)
         );
         sheetId = sheetService.createSheet(columns);
     }
@@ -39,13 +41,32 @@ class SheetServiceTest {
      */
     @Test
     void testSetLiteralValues() {
+        // Valid input for STRING
         sheetService.setCellValue(sheetId, "A", 10, "hello");
-        sheetService.setCellValue(sheetId, "B", 11, "true");
 
-        // Mismatch: column B is boolean, "hello" is not
+        // Valid input for BOOLEAN
+        sheetService.setCellValue(sheetId, "B", 11, "true");
+        sheetService.setCellValue(sheetId, "B", 12, "false");
+
+        // Invalid input for BOOLEAN
         assertThrows(InvalidTypeException.class, () ->
-                sheetService.setCellValue(sheetId, "B", 12, "hello"));
+                sheetService.setCellValue(sheetId, "B", 13, "notABoolean"));
+
+        // Valid input for INT
+        sheetService.setCellValue(sheetId, "C", 14, "42");
+
+        // Invalid input for INT
+        assertThrows(InvalidTypeException.class, () ->
+                sheetService.setCellValue(sheetId, "D", 15, "42.5")); // Double passed as String
+
+        // Valid input for DOUBLE
+        sheetService.setCellValue(sheetId, "E", 16, "42.5");
+
+        // Invalid input for DOUBLE
+        assertThrows(InvalidTypeException.class, () ->
+                sheetService.setCellValue(sheetId, "E", 17, "notANumber"));
     }
+
 
     /**
      * (C,1)->(A,10). Then (A,10)->(C,1) => cycle => error.
@@ -109,13 +130,15 @@ class SheetServiceTest {
      */
     @Test
     void testRevertAfterTypeMismatch() {
+        // Valid BOOLEAN value
         sheetService.setCellValue(sheetId, "B", 11, "true");
         assertEquals(true, sheetService.getSheetData(sheetId).get("B,11"));
 
-        // Mismatch => revert
+        // Invalid BOOLEAN value
         assertThrows(InvalidTypeException.class, () ->
-                sheetService.setCellValue(sheetId, "B", 11, "notABoolean")
-        );
+                sheetService.setCellValue(sheetId, "B", 11, "123")); // Invalid for BOOLEAN
+
+        // Ensure the original value remains
         assertEquals(true, sheetService.getSheetData(sheetId).get("B,11"));
     }
 
@@ -189,4 +212,20 @@ class SheetServiceTest {
         assertEquals("foo", data.get("A,10"));
         assertEquals(true, data.get("B,10"));
     }
+
+    @Test
+    void testDoubleColumnStrictTypeCheck() {
+        // Valid DOUBLE value
+        sheetService.setCellValue(sheetId, "E", 1, "42.5");
+        assertEquals(42.5, sheetService.getSheetData(sheetId).get("E,1"));
+
+        // Valid DOUBLE value as an integer representation
+        sheetService.setCellValue(sheetId, "E", 2, "42");
+        assertEquals(42.0, sheetService.getSheetData(sheetId).get("E,2")); // Casted to double internally
+
+        // Invalid DOUBLE value
+        assertThrows(InvalidTypeException.class, () ->
+                sheetService.setCellValue(sheetId, "E", 3, "notANumber"));
+    }
+
 }

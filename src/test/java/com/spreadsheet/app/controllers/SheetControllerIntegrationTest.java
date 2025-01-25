@@ -71,6 +71,25 @@ class SheetControllerIntegrationTest {
             // Expected exception
         }
 
+        // DOUBLE in BOOLEAN column
+        HttpEntity<String> doubleRequest = new HttpEntity<>("42.5", cellHeaders);
+        try {
+            restTemplate.exchange(setCellUrlB1, HttpMethod.PUT, doubleRequest, Void.class);
+            fail("Should have thrown an error due to stricter type mismatch!");
+        } catch (Exception e) {
+            // Expected exception
+        }
+
+        // INT in BOOLEAN column
+        HttpEntity<String> intRequest = new HttpEntity<>("42", cellHeaders);
+        try {
+            restTemplate.exchange(setCellUrlB1, HttpMethod.PUT, intRequest, Void.class);
+            fail("Should have thrown an error due to stricter type mismatch!");
+        } catch (Exception e) {
+            // Expected exception
+        }
+
+
         // 4) Confirm that "B,1" was not set
         String getSheetUrl = "http://localhost:" + port + "/sheet/" + sheetId;
         ResponseEntity<Map> getResponse = restTemplate.getForEntity(getSheetUrl, Map.class);

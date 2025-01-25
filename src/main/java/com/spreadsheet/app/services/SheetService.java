@@ -267,8 +267,7 @@ public class SheetService {
                 }
                 break;
             case DOUBLE:
-                // We allow "int as double" or not, depending on policy; here it's strict
-                if (!(actualValue instanceof Double) && !(actualValue instanceof Integer)) {
+                if (!(actualValue instanceof Double)) {
                     throw new InvalidTypeException("Expected DOUBLE, got " + actualValue.getClass());
                 }
                 break;
